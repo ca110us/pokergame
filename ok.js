@@ -1,6 +1,7 @@
 var express = require('express');
 var htmlConsole = require('./util/htmlMaker');
 var poker = require('./util/poker');
+var webSocketServer = require('ws').Server;
 
 var app = new express();
 
@@ -54,15 +55,15 @@ app.get('/', function (req, res) {
     players++;
 })
 
-app.get('/sendCards', function (req, res) {
+// app.get('/sendCards', function (req, res) {
 
-    var response = {
-        "cards":req.query.cards,
-        "player":req.query.player
-    };
-    console.log(response);
-    res.end(JSON.stringify(response));
- })
+//     var response = {
+//         "cards":req.query.cards,
+//         "player":req.query.player
+//     };
+//     console.log(response);
+//     res.end(JSON.stringify(response));
+//  })
   
 var server = app.listen(1215, function () {
   
@@ -72,3 +73,12 @@ var server = app.listen(1215, function () {
    console.log("应用实例，访问地址为 http://%s:%s", host, port)
   
 })
+
+wss = new webSocketServer({ port: 8181 });
+wss.on('connection', function (ws) {
+    console.log('client connected');
+    ws.on('message', function (message) {
+        // console.log(message);
+        ws.send(message);
+    });
+});

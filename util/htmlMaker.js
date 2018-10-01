@@ -5,7 +5,7 @@ exports.makeHtmlBody = function(message,player) {
     '<body>' +
     '<p id="player" hidden="hidden" data-player="' + player + '"></p>' +
     '<input type="text" id="cards">  <br>' +
-    '<button id="sendCardBtn" type="button">出牌</button>' +
+    '<button onclick="sendCards();" type="button">出牌</button>' +
     '</body>' +
     '<script src="js/sendCard.js"></script>'+
     '</html>'
