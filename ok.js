@@ -34,7 +34,7 @@ app.get('/', function (req, res) {
             player1.push(wholePoker[index]);
             wholePoker.splice(index,1);
         }
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player1)));
+        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player1),'player1'));
     }
     if (players == 1) {
         for(i = 0; i < 18; i++){
@@ -42,11 +42,11 @@ app.get('/', function (req, res) {
             player2.push(wholePoker[index]);
             wholePoker.splice(index,1);
         }
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player2)));
-    }
+        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player2),'plqyer2'));
+    } 
     if (players == 2) {
         player3 = wholePoker;
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player3)));
+        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player3),'player3'));
     }
     if (players > 2) {
         res.send('too many people');
@@ -57,7 +57,8 @@ app.get('/', function (req, res) {
 app.get('/sendCards', function (req, res) {
 
     var response = {
-        "cards":req.query.cards
+        "cards":req.query.cards,
+        "player":req.query.player
     };
     console.log(response);
     res.end(JSON.stringify(response));
