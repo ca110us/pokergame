@@ -54,7 +54,7 @@ exports.outCards = function(cards,lastTurn,player) {
     if (cards.type!=lastTurn.type && cards.type!='zhadan' && cards.type!='wangzha') {
         return false;
     }else{
-        if (cards.cards[0]>lastTurn.cards[0]) {
+        if (cards.cards[0]>lastTurn.cards[0]&&cards.cards.length == lastTurn.cards.length) {
             lastTurn.player=player;
             lastTurn.type=cards.type;
             lastTurn.cards=cards.cards;
@@ -84,6 +84,7 @@ exports.outCards = function(cards,lastTurn,player) {
             lastTurn.cards=cards.cards;
             return true;
     }
+    return false;
 }
 
 exports.delCards = function(arr1,arr2) {
