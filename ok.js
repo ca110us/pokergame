@@ -102,12 +102,16 @@ io.on('connection', function (socket) {
                             socket.emit('receiveMessage','illegalPoker');
                         }else{
                             poker.delCards(player1,cards.cards);
-                            socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',poker.makePoker(player1).join(','));
-                            lastTurn.nowPlayer='player2';
-                            socket.to(playerList['player2']).emit('receiveMessage', 'its your turn');
-                            console.log(lastTurn);
+                            if (player1.length==0) {
+                                socket.broadcast.emit('playerCards','Game over!Player1 is the winner!');
+                            }else{
+                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',poker.makePoker(player1).join(','));
+                                lastTurn.nowPlayer='player2';
+                                socket.to(playerList['player2']).emit('receiveMessage', 'its your turn');
+                                console.log(lastTurn);
+                            }
                         }
                     }
                 }
@@ -130,12 +134,16 @@ io.on('connection', function (socket) {
                             socket.emit('receiveMessage','illegalPoker');
                         }else{
                             poker.delCards(player2,cards.cards);
-                            socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',poker.makePoker(player2).join(','));
-                            lastTurn.nowPlayer='player3';
-                            socket.to(playerList['player3']).emit('receiveMessage', 'its your turn');
-                            console.log(lastTurn);
+                            if (player2.length==0) {
+                                socket.broadcast.emit('playerCards','Game over!Player2 is the winner!');
+                            }else{
+                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',poker.makePoker(player2).join(','));
+                                lastTurn.nowPlayer='player3';
+                                socket.to(playerList['player3']).emit('receiveMessage', 'its your turn');
+                                console.log(lastTurn);
+                            }
                         }
                     }
                 }
@@ -158,12 +166,16 @@ io.on('connection', function (socket) {
                             socket.emit('receiveMessage','illegalPoker');
                         }else{
                             poker.delCards(player3,cards.cards);
-                            socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
-                            socket.emit('receiveMessage',poker.makePoker(player3).join(','));
-                            lastTurn.nowPlayer='player1';
-                            socket.to(playerList['player1']).emit('receiveMessage', 'its your turn');
-                            console.log(lastTurn);
+                            if (player3.length==0) {
+                                socket.broadcast.emit('playerCards','Game over!Player3 is the winner!');
+                            }else{
+                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
+                                socket.emit('receiveMessage',poker.makePoker(player3).join(','));
+                                lastTurn.nowPlayer='player1';
+                                socket.to(playerList['player1']).emit('receiveMessage', 'its your turn');
+                                console.log(lastTurn);
+                            }
                         }
                     }
                 }
