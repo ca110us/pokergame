@@ -1,7 +1,11 @@
 var express = require('express');
 var htmlConsole = require('./util/htmlMaker');
 var poker = require('./util/poker');
-var webSocketServer = require('ws').Server;
+// var webSocketServer = require('ws').Server;
+var server = require('http').createServer();
+var io = require('socket.io')(server);
+
+
 
 var app = new express();
 
@@ -14,6 +18,7 @@ var wholePoker = [];
 var player1 = [];
 var player2 = [];
 var player3 = [];
+var playerList = {};
 
 singleCard.forEach(function(card,i){
     for (i = 0; i < 4; i++) {
@@ -43,7 +48,7 @@ app.get('/', function (req, res) {
             player2.push(wholePoker[index]);
             wholePoker.splice(index,1);
         }
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player2),'plqyer2'));
+        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player2),'player2'));
     } 
     if (players == 2) {
         player3 = wholePoker;
@@ -65,6 +70,21 @@ app.get('/', function (req, res) {
 //     res.end(JSON.stringify(response));
 //  })
   
+io.on('connection', function (socket) {
+    // socket.broadcast.emit('user connected');//群发
+    socket.on('bindSocket', function (data) {
+        playerList[data.player] = socket.id;
+        console.log(playerList);
+    });
+    socket.on('outCards', function (data) {
+        console.log(data);
+        // socket.to(playerList.player2).emit('my message', 'msg');
+        // console.log(playerList.player2);
+        socket.broadcast.emit('playerCards',data);
+    });
+});
+server.listen(1214);
+
 var server = app.listen(1215, function () {
   
    var host = server.address().address
@@ -74,11 +94,11 @@ var server = app.listen(1215, function () {
   
 })
 
-wss = new webSocketServer({ port: 8181 });
-wss.on('connection', function (ws) {
-    console.log('client connected');
-    ws.on('message', function (message) {
-        // console.log(message);
-        ws.send(message);
-    });
-});
+// wss = new webSocketServer({ port: 8181 });
+// wss.on('connection', function (ws) {
+//     console.log('client connected');
+//     ws.on('message', function (message) {
+//         // console.log(message);
+//         ws.send(message);
+//     });
+// });
