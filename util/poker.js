@@ -62,10 +62,10 @@ exports.outCards = function(cards,lastTurn,player) {
         }
     }
     if (cards.type=='zhadan') {
-        if (lsatTurn.type=='wangzha') {
+        if (lastTurn.type=='wangzha') {
             return false;
         }
-        if (lsatTurn.type!='zhadan') {
+        if (lastTurn.type!='zhadan') {
             lastTurn.player=player;
             lastTurn.type=cards.type;
             lastTurn.cards=cards.cards;
