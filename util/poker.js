@@ -1,3 +1,19 @@
+isContained = function(large,small){
+    largeArr =  large.slice(0);
+    smallArr =  small.slice(0);
+	var result = true;
+	for(var i = smallArr.length - 1; i >= 0; i--){
+		var index = largeArr.indexOf(smallArr[i]);
+		if(index === -1){
+			result = false;
+			break;
+		}else{
+			largeArr.splice(index, 1);
+		}
+	}
+	return result;
+}
+
 exports.makePoker = function(arr) {
     
     arr.sort(function(a,b){
@@ -158,18 +174,3 @@ exports.checkCards = function(cards,myCards) {
     }
 }
 
-function isContained(a,b){
-    arr1 =  a.slice(0);
-    arr2 =  b.slice(0);
-	var result = true;
-	for(var i = arr2.length - 1; i >= 0; i--){
-		var index = arr1.indexOf(arr2[i]);
-		if(index === -1){
-			result = false;
-			break;
-		}else{
-			arr1.splice(index, 1);
-		}
-	}
-	return result;
-}
