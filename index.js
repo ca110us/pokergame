@@ -89,20 +89,24 @@ io.on('connection', function (socket) {
         var outCardsHandle = function outCardsHandle(data,playerCards,nowPlayer,nextPlayer){
             if (game.lastTurn.nowPlayer!=nowPlayer) {
                 socket.emit('receiveMessage','its not your turn');
-            }else{
+            }
+            if (game.lastTurn.nowPlayer==nowPlayer) {
                 if (data.cards=='') {
                     game.lastTurn.nowPlayer=nextPlayer;
                     socket.emit('receiveMessage',data.player + ':give up');
                     socket.broadcast.emit('receiveMessage',data.player + ':give up');
                     socket.to(game.playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
-                }else{
+                }
+                if (data.cards!='') {
                     if (poker.checkCards(data.cards,playerCards)==false) {
                         socket.emit('receiveMessage','illegalPoker');
-                    }else{
+                    }
+                    if (poker.checkCards(data.cards,playerCards)!=false) {
                         cards = poker.checkCards(data.cards,playerCards);
                         if (poker.outCards(cards,game.lastTurn,data.player)==false) {
                             socket.emit('receiveMessage','illegalPoker');
-                        }else{
+                        }
+                        if (poker.outCards(cards,game.lastTurn,data.player)!=false) {
                             poker.delCards(playerCards,cards.cards);
                             if (playerCards.length==0) {
                                 socket.broadcast.emit('playerCards',data.player + ':' + poker.makePokerByPowerlist(cards.cards));
@@ -112,7 +116,8 @@ io.on('connection', function (socket) {
                                 game.status = 'over';
                                 db.gameRecord(data.player);
                                 game.gameInit();
-                            }else{
+                            }
+                            if (playerCards.length!=0) {
                                 socket.broadcast.emit('playerCards',data.player + ':' + poker.makePokerByPowerlist(cards.cards));
                                 socket.emit('receiveMessage',data.player+ ':' + poker.makePokerByPowerlist(cards.cards));
                                 socket.emit('receiveMessage',poker.makePokerByPowerlist(playerCards).join(','));
@@ -148,12 +153,3 @@ var pokerGame = app.listen(1215, function () {
    console.log("pokerGame by Edboffical http://%s:%s", host, port)
   
 })
-
-// wss = new webSocketServer({ port: 8181 });
-// wss.on('connection', function (ws) {
-//     console.log('client connected');
-//     ws.on('message', function (message) {
-//         // console.log(message);
-//         ws.send(message);
-//     });
-// });
