@@ -1,121 +1,124 @@
 var express = require('express');
-var htmlConsole = require('./util/htmlMaker');
-var poker = require('./util/poker');
-// var webSocketServer = require('ws').Server;
+var htmlConsole = require('./lib/htmlMaker');
+var poker = require('./lib/poker');
+var db = require('./lib/db')
+var game = require('./lib/game')
 var server = require('http').createServer();
 var io = require('socket.io')(server);
 
 
+game = new game();
+
+game.gameInit();
 
 var app = new express();
 
-var players = 0;
-
-var singleCard = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
-
-var wholePoker = [];
-
-var player1 = [];
-var player2 = [];
-var player3 = [];
-var playerList = {};
-
-var lastTurn = {player:'',cards:'',type:'',nowPlayer:'player1'};
-
-singleCard.forEach(function(card,i){
-    for (i = 0; i < 4; i++) {
-        if (card !== 16 && card !== 17) {
-            wholePoker.push(card);
-        }
-    }
-});
-wholePoker.push(16,17);
-
-console.log(poker.makePoker(wholePoker));
 
 app.use(express.static('static'));
 
 app.get('/', function (req, res) {
-    if (players == 0) {
-        for(i = 0; i < 18; i++){
-            index = Math.floor((Math.random()*wholePoker.length));
-            player1.push(wholePoker[index]);
-            wholePoker.splice(index,1);
-        }
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player1),'player1'));
+    if (game.players == 0) {
+        res.send(htmlConsole.makeHtmlBody('player1'));
     }
-    if (players == 1) {
-        for(i = 0; i < 18; i++){
-            index = Math.floor((Math.random()*wholePoker.length));
-            player2.push(wholePoker[index]);
-            wholePoker.splice(index,1);
-        }
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player2),'player2'));
+    if (game.players == 1) {
+        res.send(htmlConsole.makeHtmlBody('player2'));
     } 
-    if (players == 2) {
-        player3 = wholePoker;
-        res.send(htmlConsole.makeHtmlBody(poker.makePoker(player3),'player3'));
+    if (game.players == 2) {
+        res.send(htmlConsole.makeHtmlBody('player3'));
     }
-    if (players > 2) {
+    if (game.players > 2) {
         res.send('too many people');
     }
-    players++;
+    game.players++;
 })
 
-// app.get('/sendCards', function (req, res) {
-
-//     var response = {
-//         "cards":req.query.cards,
-//         "player":req.query.player
-//     };
-//     console.log(response);
-//     res.end(JSON.stringify(response));
-//  })
   
 io.on('connection', function (socket) {
-    // socket.broadcast.emit('user connected');//群发
+    var preparationHandler = function preparation() {
+        if (game.status=='ready'||game.status=='gamming') {
+            switch (game.players) {
+                case 1:
+                    socket.emit('receiveMessage','等待玩家1/3');
+                    socket.broadcast.emit('receiveMessage','等待玩家1/3');
+                    break;
+                case 2:
+                    socket.emit('receiveMessage','等待玩家2/3');
+                    socket.broadcast.emit('receiveMessage','等待玩家2/3');
+                    break;
+                case 3:
+                    socket.emit('receiveMessage','游戏开始！');
+                    socket.broadcast.emit('receiveMessage','游戏开始！');
+                    game.status = 'gamming';
+                    socket.to(game.playerList['player1']).emit('receiveMessage', 'its your turn');
+                    game.distributeCards();
+                    socket.emit('receiveMessage',poker.makePokerByPowerlist(game.player3).join(','));
+                    socket.to(game.playerList['player1']).emit('receiveMessage', poker.makePokerByPowerlist(game.player1).join(','));
+                    socket.to(game.playerList['player2']).emit('receiveMessage', poker.makePokerByPowerlist(game.player2).join(','));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    socket.on('disconnecting', (reason) => {
+        var disconnectedPlayer = '';
+        for (var player in game.playerList){
+            if (game.playerList[player]==socket.id) {
+                disconnectedPlayer = player;
+                delete game.playerList[player];
+            }
+        }
+        newPlayerList = JSON.parse(JSON.stringify(game.playerList));
+        if (game.status=='gamming') {
+            socket.broadcast.emit('receiveMessage', player + '由于意外断开，本局游戏结束，游戏不做记录，断线原因:' + reason);
+        }
+        game.gameInit();
+        game.playerList = newPlayerList;
+        game.players = Object.getOwnPropertyNames(newPlayerList).length;
+        console.log(game.playerList);
+        console.log(game.players);
+        preparationHandler();
+    });
+
     socket.on('bindSocket', function (data) {
-        playerList[data.player] = socket.id;
-        console.log(playerList);
+        preparationHandler();
+        game.playerList[data.player] = socket.id;
     });
     socket.on('outCards', function (data) {
-        // console.log(data);
-        // if (lastTurn=='' && data.player!='player1') {
-        //     socket.emit('receiveMessage','its not your turn');
-        // }
-
         var outCardsHandle = function outCardsHandle(data,playerCards,nowPlayer,nextPlayer){
-            if (lastTurn.nowPlayer!=nowPlayer && lastTurn.player!='') {
+            if (game.lastTurn.nowPlayer!=nowPlayer) {
                 socket.emit('receiveMessage','its not your turn');
             }else{
                 if (data.cards=='') {
-                    lastTurn.nowPlayer=nextPlayer;
+                    game.lastTurn.nowPlayer=nextPlayer;
                     socket.emit('receiveMessage',data.player + ':give up');
                     socket.broadcast.emit('receiveMessage',data.player + ':give up');
-                    socket.to(playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
+                    socket.to(game.playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
                 }else{
                     if (poker.checkCards(data.cards,playerCards)==false) {
                         socket.emit('receiveMessage','illegalPoker');
                     }else{
-                        // console.log(player1);
-                        // socket.emit('receiveMessage',poker.checkCards(data.cards,player1));
                         cards = poker.checkCards(data.cards,playerCards);
-                        if (poker.outCards(cards,lastTurn,data.player)==false) {
+                        if (poker.outCards(cards,game.lastTurn,data.player)==false) {
                             socket.emit('receiveMessage','illegalPoker');
                         }else{
                             poker.delCards(playerCards,cards.cards);
                             if (playerCards.length==0) {
-                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
-                                socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
+                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePokerByPowerlist(cards.cards));
+                                socket.emit('receiveMessage',data.player+ ':' + poker.makePokerByPowerlist(cards.cards));
                                 socket.emit('receiveMessage','Game over!You win!');
                                 socket.broadcast.emit('receiveMessage','Game over!' + nowPlayer + ' is the winner!');
+                                game.status = 'over';
+                                db.gameRecord(data.player);
+                                game.gameInit();
                             }else{
-                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePoker(cards.cards));
-                                socket.emit('receiveMessage',data.player+ ':' + poker.makePoker(cards.cards));
-                                socket.emit('receiveMessage',poker.makePoker(playerCards).join(','));
-                                lastTurn.nowPlayer=nextPlayer;
-                                socket.to(playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
-                                console.log(lastTurn);
+                                socket.broadcast.emit('playerCards',data.player + ':' + poker.makePokerByPowerlist(cards.cards));
+                                socket.emit('receiveMessage',data.player+ ':' + poker.makePokerByPowerlist(cards.cards));
+                                socket.emit('receiveMessage',poker.makePokerByPowerlist(playerCards).join(','));
+                                game.lastTurn.nowPlayer=nextPlayer;
+                                socket.to(game.playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
+                                console.log(game.lastTurn);
                             }
                         }
                     }
@@ -123,26 +126,26 @@ io.on('connection', function (socket) {
             }
         }
 
-        if (data.player=='player1') {
-            outCardsHandle(data,player1,'player1','player2')
+        if (data.player=='player1' && game.status=='gamming') {
+            outCardsHandle(data,game.player1,'player1','player2')
         }
-        if (data.player=='player2') {
-            outCardsHandle(data,player2,'player2','player3')
+        if (data.player=='player2' && game.status=='gamming') {
+            outCardsHandle(data,game.player2,'player2','player3')
         }
-        if (data.player=='player3') {
-            outCardsHandle(data,player3,'player3','player1')
+        if (data.player=='player3' && game.status=='gamming') {
+            outCardsHandle(data,game.player3,'player3','player1')
         }
-        // socket.broadcast.emit('playerCards',data);
     });
 });
+
 server.listen(1214);
 
-var server = app.listen(1215, function () {
+var pokerGame = app.listen(1215, function () {
   
-   var host = server.address().address
-   var port = server.address().port
+   var host = pokerGame.address().address
+   var port = pokerGame.address().port
   
-   console.log("应用实例，访问地址为 http://%s:%s", host, port)
+   console.log("pokerGame by Edboffical http://%s:%s", host, port)
   
 })
 
