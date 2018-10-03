@@ -94,7 +94,7 @@ io.on('connection', function (socket) {
                     game.lastTurn.nowPlayer=nextPlayer;
                     socket.emit('receiveMessage',data.player + ':give up');
                     socket.broadcast.emit('receiveMessage',data.player + ':give up');
-                    socket.to(game.playerList[nextPlayer]).emit('receiveMessage', data.player + ',its your turn');
+                    socket.to(game.playerList[nextPlayer]).emit('receiveMessage', nextPlayer + ',its your turn');
                 }
                 if (data.cards!='') {
                     if (poker.checkCards(data.cards,playerCards)==false) {
@@ -121,7 +121,7 @@ io.on('connection', function (socket) {
                                 socket.emit('receiveMessage',data.player+ ':' + poker.makePokerByPowerlist(cards.cards));
                                 socket.emit('receiveMessage',poker.makePokerByPowerlist(playerCards).join(','));
                                 game.lastTurn.nowPlayer=nextPlayer;
-                                socket.to(game.playerList[nextPlayer]).emit('receiveMessage',data.player + ',its your turn');
+                                socket.to(game.playerList[nextPlayer]).emit('receiveMessage',nextPlayer + ',its your turn');
                                 console.log(game.lastTurn);
                             }
                         }
