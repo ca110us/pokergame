@@ -46,14 +46,15 @@ io.on('connection', function (socket) {
                     socket.broadcast.emit('receiveMessage','等待玩家2/3');
                     break;
                 case 3:
-                    socket.emit('receiveMessage','游戏开始！');
-                    socket.broadcast.emit('receiveMessage','游戏开始！');
+                    socket.emit('receiveMessage','游戏开始！您是 player3');
                     game.status = 'gamming';
-                    socket.to(game.playerList['player1']).emit('receiveMessage', 'its your turn');
                     game.distributeCards();
                     socket.emit('receiveMessage',poker.makePokerByPowerlist(game.player3).join(','));
                     socket.to(game.playerList['player1']).emit('receiveMessage', poker.makePokerByPowerlist(game.player1).join(','));
                     socket.to(game.playerList['player2']).emit('receiveMessage', poker.makePokerByPowerlist(game.player2).join(','));
+                    socket.to(game.playerList['player1']).emit('receiveMessage', '游戏开始！您是 player1');
+                    socket.to(game.playerList['player2']).emit('receiveMessage', '游戏开始！您是 player2');
+                    socket.to(game.playerList['player1']).emit('receiveMessage', 'player1,its your turn');
                     break;
                 default:
                     break;
@@ -93,7 +94,7 @@ io.on('connection', function (socket) {
                     game.lastTurn.nowPlayer=nextPlayer;
                     socket.emit('receiveMessage',data.player + ':give up');
                     socket.broadcast.emit('receiveMessage',data.player + ':give up');
-                    socket.to(game.playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
+                    socket.to(game.playerList[nextPlayer]).emit('receiveMessage', data.player + ',its your turn');
                 }
                 if (data.cards!='') {
                     if (poker.checkCards(data.cards,playerCards)==false) {
@@ -120,7 +121,7 @@ io.on('connection', function (socket) {
                                 socket.emit('receiveMessage',data.player+ ':' + poker.makePokerByPowerlist(cards.cards));
                                 socket.emit('receiveMessage',poker.makePokerByPowerlist(playerCards).join(','));
                                 game.lastTurn.nowPlayer=nextPlayer;
-                                socket.to(game.playerList[nextPlayer]).emit('receiveMessage', 'its your turn');
+                                socket.to(game.playerList[nextPlayer]).emit('receiveMessage',data.player + ',its your turn');
                                 console.log(game.lastTurn);
                             }
                         }
