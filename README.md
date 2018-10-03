@@ -10,5 +10,5 @@ pokergame by node.js
 * 单牌 example:3
 * 三不带 example:333
 * 炸弹 example:4444
-* 顺子 example:45678
+* 顺子 example:45678 (5个 / 5个以上连牌)
 * 王炸（全场最大） example:￥$ 
