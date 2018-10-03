@@ -76,8 +76,6 @@ io.on('connection', function (socket) {
         game.gameInit();
         game.playerList = newPlayerList;
         game.players = Object.getOwnPropertyNames(newPlayerList).length;
-        console.log(game.playerList);
-        console.log(game.players);
         preparationHandler();
     });
 
